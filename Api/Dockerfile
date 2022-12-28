@@ -11,7 +11,7 @@ USER appuser
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
 WORKDIR /src
-COPY [../Aca.Models/, "./Aca.Models/"]
+COPY ["../Aca.Models/", "./Aca.Models/"]
 # RUN dotnet restore "Aca.Models/Aca.Models.csproj"
 # RUN dotnet build "Aca.Models/Aca.Models.csproj" -c Release -o /app/build
 COPY ["Api.csproj", "./"]

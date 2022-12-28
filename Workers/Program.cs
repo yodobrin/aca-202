@@ -7,12 +7,12 @@ var builder = Host.CreateDefaultBuilder(args);
 
 // when running localy and your user is granted right rbac on the keyvault, u can use this:
 
-builder.ConfigureAppConfiguration((context, config) =>
-{
-    config.AddAzureKeyVault(
-        new Uri($"https://acceptvault.vault.azure.net/"),
-        new DefaultAzureCredential());
-});
+// builder.ConfigureAppConfiguration((context, config) =>
+// {
+//     config.AddAzureKeyVault(
+//         new Uri($"https://acceptvault.vault.azure.net/"),
+//         new DefaultAzureCredential());
+// });
 
 builder.ConfigureAppConfiguration((context, config) =>
 {

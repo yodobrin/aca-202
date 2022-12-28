@@ -1,4 +1,4 @@
-﻿namespace Aca.Models;
+﻿
 // this class would be used to create a new task and monitor its progress
 using Newtonsoft.Json;
 

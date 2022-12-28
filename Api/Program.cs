@@ -5,16 +5,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // when running localy and your user is granted right rbac on the keyvault, u can use this:
-builder.Configuration.AddAzureKeyVault(
-        new Uri($"https://acceptvault.vault.azure.net/"),
-        new DefaultAzureCredential());
-
 // builder.Configuration.AddAzureKeyVault(
-//         new Uri($"https://{builder.Configuration["keyvault"]}.vault.azure.net/"),
-//         new DefaultAzureCredential(new DefaultAzureCredentialOptions
-//         {
-//             ManagedIdentityClientId = builder.Configuration["AzureADManagedIdentityClientId"]
-//         }));
+//         new Uri($"https://acceptvault.vault.azure.net/"),
+//         new DefaultAzureCredential());
+
+builder.Configuration.AddAzureKeyVault(
+        new Uri($"https://{builder.Configuration["keyvault"]}.vault.azure.net/"),
+        new DefaultAzureCredential(new DefaultAzureCredentialOptions
+        {
+            ManagedIdentityClientId = builder.Configuration["AzureADManagedIdentityClientId"]
+        }));
 
 // Add services to the container.
 

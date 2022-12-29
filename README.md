@@ -80,11 +80,11 @@ The sample uses Azure Storage Queue as the middleware for tasks due to its cost-
 
 3. The code contains 3 projects:
 
-3.1 The Api Server project contains the code for the Api Server. The Api Server is responsible for accepting requests from the client and returning a 202 Accepted response to the client, along with a resource URL that can be used to poll the server for the status of the request.
+    - The Api Server project contains the code for the Api Server. The Api Server is responsible for accepting requests from the client and returning a 202 Accepted response to the client, along with a resource URL that can be used to poll the server for the status of the request.
 
-3.2 The Worker project contains the code for the Worker. The Worker is responsible for processing messages from an Azure Storage Queue and updating the status of the task in a blob stored in Azure Storage.
+    - The Worker project contains the code for the Worker. The Worker is responsible for processing messages from an Azure Storage Queue and updating the status of the task in a blob stored in Azure Storage.
 
-3.3 The Models project contains the models used by the Api Server and Worker. This project is a class library that is referenced by both the Api Server and Worker projects.
+    - The Models project contains the models used by the Api Server and Worker. This project is a class library that is referenced by both the Api Server and Worker projects.
 
 4. You can customize each project to meet your specific needs. For example, you can add additional properties to the TaskRequest and TaskStatus models, or add additional logic to the Worker to perform the actual work required to complete the task. You can also add additional controllers to the Api Server to handle additional requests, for example if you need another middleware such as Azure Service Bus, you could add another controller to address this need.
 

@@ -48,7 +48,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           
       - name: Cleanup
-        if: always()
         continue-on-error: true
         run: |
           dotnet nuget remove source github

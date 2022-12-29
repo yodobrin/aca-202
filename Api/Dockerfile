@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
 WORKDIR /src
 COPY ["Api.csproj", "./"]
 COPY ["nuget.config", "./"]
-RUN dotnet nuget add source https://nuget.pkg.github.com/yodobrin/index.json
+# RUN dotnet nuget add source https://nuget.pkg.github.com/yodobrin/index.json
 RUN dotnet restore "Api.csproj" --configfile nuget.config
 COPY . .
 WORKDIR "/src/."

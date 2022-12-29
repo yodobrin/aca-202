@@ -19,8 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Adjust NuGet Config Credentials
-        run: |
-          pwd         
+        run: |   
           mv ./Api/nuget.ci.config ./Api/nuget.config
           echo $(sed -e "s/\${USER}/${{ secrets.REGISTRY_USER }}/" -e "s@\${PAT}@${{ secrets.PACKAGE_TOKEN }}@" ./Api/nuget.config) > ./Api/nuget.config
 

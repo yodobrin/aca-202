@@ -475,5 +475,5 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-models/nuget.config
-Workers/nuget.config
+
+aca.models/nuget.config

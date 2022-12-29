@@ -12,7 +12,8 @@ USER appuser
 FROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build
 WORKDIR /src
 COPY ["Api.csproj", "./"]
-RUN dotnet restore "Api.csproj"
+COPY ["nuget.config", "./"]
+RUN dotnet restore "Api.csproj" --configuration nuget.config
 COPY . .
 WORKDIR "/src/."
 RUN dotnet build "Api.csproj" --configuration nuget.config -c Release -o /app/build

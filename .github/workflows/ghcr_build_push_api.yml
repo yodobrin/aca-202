@@ -22,7 +22,7 @@ jobs:
         run: |
           pwd         
           mv ./Api/nuget.ci.config ./Api/nuget.config
-          echo $(sed -e "s/\${USER}/${{ secrets.REGISTRY_USER }}/" -e "s@\${PAT}@${{ secrets.PACKAGE_TOKEN }}@" nuget.config) >nuget.config
+          echo $(sed -e "s/\${USER}/${{ secrets.REGISTRY_USER }}/" -e "s@\${PAT}@${{ secrets.PACKAGE_TOKEN }}@" ./Api/nuget.config) > ./Api/nuget.config
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2

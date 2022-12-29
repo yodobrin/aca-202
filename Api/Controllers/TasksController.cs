@@ -10,24 +10,24 @@ namespace Aca.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class TaskController : ControllerBase
+public class TasksController : ControllerBase
 {
     
 
-    private readonly ILogger<TaskController> _logger;
+    private readonly ILogger<TasksController> _logger;
 
     private IConfiguration _configuration;
 
     
 
-    public TaskController(ILogger<TaskController> logger, IConfiguration configuration)
+    public TasksController(ILogger<TasksController> logger, IConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
     }
 
-     [HttpPost]
-    public async Task<ActionResult<string>> TaskRequest(TaskRequest item)
+     [HttpPost("QueueTask")]
+    public async Task<ActionResult<string>> QueueTaskRequest(TaskRequest item)
     {
         string storageCS = _configuration.GetValue<string>("StorageCS") ?? string.Empty;
         string queueName = _configuration.GetValue<string>("TaskQueueName") ?? string.Empty;
@@ -40,25 +40,30 @@ public class TaskController : ControllerBase
             return BadRequest("StorageCS, TaskQueueName or TaskBlobContainerName is not set in the configuration");
         }
 
-        QueueClient queueClient = new QueueClient(storageCS, queueName);
-        await queueClient.CreateIfNotExistsAsync();
-        // generate a blob and update the task with blob uri
-        BlobContainerClient blobContainerClient = new BlobContainerClient(storageCS,blobContainerName);
-        await blobContainerClient.CreateIfNotExistsAsync();
+        try{
+            QueueClient queueClient = new QueueClient(storageCS, queueName);
+            await queueClient.CreateIfNotExistsAsync();
+            // generate a blob and update the task with blob uri
+            BlobContainerClient blobContainerClient = new BlobContainerClient(storageCS,blobContainerName);
+            await blobContainerClient.CreateIfNotExistsAsync();
+            
+            string blobName = $"{item.TaskId.ToString()}-202";
+            BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
+            item.returnUri = blobClient.Uri.ToString();
+            
+            // upload the task content to blob
+            _logger.LogInformation($"Uploading task {item.TaskId} to blob {blobName} with content {item.ToJson()}");
+            Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(item.ToJson()));
+            await blobClient.UploadAsync(stream);
+            
+            //push to queue
+            await queueClient.SendMessageAsync(item.ToJson());
+            return Accepted(CreateSasToken(blobClient,blobContainerName,blobName,sasTokenExpiry) );
+        }catch(Exception ex){
+            _logger.LogError(ex, "Error in processing the TaskRequest");
+            return BadRequest(ex.Message);
+        }
 
-        
-        string blobName = $"{item.TaskId.ToString()}-202";
-        BlobClient blobClient = blobContainerClient.GetBlobClient(blobName);
-        item.returnUri = blobClient.Uri.ToString();
-        // generate a sas token for the blob
-                // upload the task content to blob
-        _logger.LogInformation($"Uploading task {item.TaskId} to blob {blobName} with content {item.ToJson()}");
-        Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(item.ToJson()));
-        await blobClient.UploadAsync(stream);
-        // await blobClient.UploadAsync(item.ToJson());
-        //push to queue
-        await queueClient.SendMessageAsync(item.ToJson());
-        return Accepted(CreateSasToken(blobClient,blobContainerName,blobName,sasTokenExpiry) );
     }
 
     private string CreateSasToken(BlobClient blob, string blobContainerName,string blobName,double sasTokenExpiry)

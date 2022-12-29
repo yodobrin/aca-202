@@ -3,18 +3,26 @@ using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var mngId = Environment.GetEnvironmentVariable("AzureADManagedIdentityClientId") ?? string.Empty;
 
-// when running localy and your user is granted right rbac on the keyvault, u can use this:
-// builder.Configuration.AddAzureKeyVault(
-//         new Uri($"https://acceptvault.vault.azure.net/"),
-//         new DefaultAzureCredential());
+// if mngId is empty, try to login using the default credentials (usualy running locally)
 
-builder.Configuration.AddAzureKeyVault(
+if(string.IsNullOrEmpty(mngId))
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri($"https://{builder.Configuration["keyvault"]}.vault.azure.net/"),
+        new DefaultAzureCredential());
+}
+else
+{
+    builder.Configuration.AddAzureKeyVault(
         new Uri($"https://{builder.Configuration["keyvault"]}.vault.azure.net/"),
         new DefaultAzureCredential(new DefaultAzureCredentialOptions
         {
             ManagedIdentityClientId = builder.Configuration["AzureADManagedIdentityClientId"]
         }));
+}
+
 
 // Add services to the container.
 
@@ -25,12 +33,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
+
 app.UseSwagger();
 app.UseSwaggerUI();
 

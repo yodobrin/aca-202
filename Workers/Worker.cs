@@ -31,36 +31,56 @@ public class Worker : BackgroundService
         }
         QueueClient queueClient = new QueueClient(storageCS, queueName);
         await queueClient.CreateIfNotExistsAsync();
-
+        bool shownWaitMessage = false;
         while (!stoppingToken.IsCancellationRequested)
         {
             // read a mesasge from the queue
             QueueMessage msg = await queueClient.ReceiveMessageAsync();
             // verify valid message
+            
             if (msg == null)
             {
-                _logger.LogInformation("No message received");
-                await Task.Delay(1000, stoppingToken);
+                if(!shownWaitMessage) _logger.LogInformation("Waiting for more messages ...");
+                else shownWaitMessage = true;
+                await Task.Delay(5000, stoppingToken);
                 continue;
             }
+            shownWaitMessage = false;
             string body = msg.Body.ToString();
             _logger.LogInformation($"Received message {msg.MessageId} with content {body}");
             // marshal the message to a TaskRequest object
-            TaskRequest taskRequest = TaskRequest.FromJson(body);
-            // update the blob with new status
-            BlobContainerClient blobContainerClient = new BlobContainerClient(storageCS, blobContainerName);
-            await blobContainerClient.CreateIfNotExistsAsync();
-            BlobClient blobClient = blobContainerClient.GetBlobClient($"{taskRequest.TaskId.ToString()}-202");
-            // update the task status
-            taskRequest.Status = TaskRequest.TaskStatus.Completed;
-            Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(taskRequest.ToJson()));
-            // upload and overwrite the blob
-            await blobClient.UploadAsync(stream, overwrite: true);
+            // wrap the next call in a try catch block
+            TaskRequest taskRequest;
+            try{
+                taskRequest = TaskRequest.FromJson(body);
+            }catch(Exception ex){
+                _logger.LogError($"Error parsing message {msg.MessageId} with content {body} to TaskRequest object. Error: {ex.Message}, removing message from queue.");
+                // delete the message from the queue
+                await queueClient.DeleteMessageAsync(msg.MessageId, msg.PopReceipt);
+                continue;
+            }
+            try{
+                // update the blob with new status
+                BlobContainerClient blobContainerClient = new BlobContainerClient(storageCS, blobContainerName);
+                await blobContainerClient.CreateIfNotExistsAsync();
+                BlobClient blobClient = blobContainerClient.GetBlobClient($"{taskRequest.TaskId.ToString()}-202");
+                // update the task status
+                taskRequest.Status = TaskRequest.TaskStatus.Completed;
+                Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(taskRequest.ToJson()));
+                // upload and overwrite the blob
+                await blobClient.UploadAsync(stream, overwrite: true);
+
+            }catch(Exception ex){
+                _logger.LogError($"Error updating blob for message {msg.MessageId} with content {body}. Error: {ex.Message}, removing message from queue.");
+                // delete the message from the queue
+                await queueClient.DeleteMessageAsync(msg.MessageId, msg.PopReceipt);
+                continue;
+            }
             // delete the message from the queue
             await queueClient.DeleteMessageAsync(msg.MessageId, msg.PopReceipt);
             
-            _logger.LogInformation("Worker processed task id {id} at: {time}",taskRequest.TaskId, DateTimeOffset.Now);
-            await Task.Delay(10, stoppingToken);
+            _logger.LogInformation($"Worker processed task id {taskRequest.TaskId} at: { DateTimeOffset.Now}");
+            // await Task.Delay(10, stoppingToken);
         }
     }
 }

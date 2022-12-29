@@ -18,20 +18,26 @@ builder.ConfigureAppConfiguration((context, config) =>
 {
     string mngId = Environment.GetEnvironmentVariable("AzureADManagedIdentityClientId") ?? string.Empty;
     string keyVaultName = Environment.GetEnvironmentVariable("keyvault") ?? string.Empty;
+    Console.WriteLine($"mngId: {mngId}, keyVaultName: {keyVaultName}");
     // check if the managed identity is not empty, or throw an exception
-    if (string.IsNullOrEmpty(mngId)|| string.IsNullOrEmpty(keyVaultName))
+    if (string.IsNullOrEmpty(mngId) || string.IsNullOrEmpty(keyVaultName))
     {
-        throw new Exception("AzureADManagedIdentityClientId or keyvault is not set");
-    }
-    
+        config.AddAzureKeyVault(
+        new Uri($"https://{keyVaultName}.vault.azure.net/"),
+        new DefaultAzureCredential(
+            new DefaultAzureCredentialOptions { }
+        ));
+        
+    }else{
     config.AddAzureKeyVault(
-        new Uri($"https://acceptvault.vault.azure.net/"),
+        new Uri($"https://{keyVaultName}.vault.azure.net/"),
         new DefaultAzureCredential(
             new DefaultAzureCredentialOptions
             {
                 ManagedIdentityClientId = mngId
             }
         ));
+    }
 });
 
 

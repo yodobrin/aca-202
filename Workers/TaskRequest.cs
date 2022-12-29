@@ -49,14 +49,20 @@ public class TaskRequest
 
     public static TaskRequest FromJson(string json)
     {
-        return JsonConvert.DeserializeObject<TaskRequest>(json);
+        TaskRequest value;
+        try{
+             value = JsonConvert.DeserializeObject<TaskRequest>(json) ?? new TaskRequest();
+        }catch{
+            throw new Exception("Error parsing json to TaskRequest object");
+        }
+        return value;
     }
     // private method to randomly select task status
     private TaskStatus RandomStatus()
     {
         var random = new Random();
         var values = Enum.GetValues(typeof(TaskStatus));
-        return (TaskStatus)values.GetValue(random.Next(values.Length));
+        return (TaskStatus)values.GetValue(random.Next(values.Length))!;
     }
 
     // private method to randomly select task priority
@@ -64,7 +70,7 @@ public class TaskRequest
     {
         var random = new Random();
         var values = Enum.GetValues(typeof(TaskPriority));
-        return (TaskPriority)values.GetValue(random.Next(values.Length));
+        return (TaskPriority)values.GetValue(random.Next(values.Length))!;
     }
     // private method to generate a random string for the task attributes by length
     private string GenerateRandomString(int length)

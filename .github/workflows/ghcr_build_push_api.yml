@@ -18,9 +18,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Ensure GitHub NuGet Source
+      - name: Adjust NuGet Config Credentials
         run: |
-          dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/OWNER/index.json"
+          rm -f ./nuget.config
+          mv nuget.ci.config nuget.config
+          echo $(sed -e "s/\${USER}/${{ secrets.REGISTRY_USER }}/" -e "s@\${PAT}@${{ secrets.PACKAGE_TOKEN }}@" nuget.config) >nuget.config
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2

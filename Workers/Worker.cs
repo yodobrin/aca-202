@@ -61,6 +61,7 @@ public class Worker : BackgroundService
             }
             try{
                 // update the blob with new status
+                await DoSomething(taskRequest);
                 BlobContainerClient blobContainerClient = new BlobContainerClient(storageCS, blobContainerName);
                 await blobContainerClient.CreateIfNotExistsAsync();
                 BlobClient blobClient = blobContainerClient.GetBlobClient($"{taskRequest.TaskId.ToString()}-202");
@@ -80,7 +81,30 @@ public class Worker : BackgroundService
             await queueClient.DeleteMessageAsync(msg.MessageId, msg.PopReceipt);
             
             _logger.LogInformation($"Worker processed task id {taskRequest.TaskId} at: { DateTimeOffset.Now}");
-            // await Task.Delay(10, stoppingToken);
+            
         }
+    }
+
+    private async Task DoSomething(TaskRequest rerquest)
+    {
+        // random factor to simulate work
+        int factor = new Random().Next(1, 20);
+
+        int waitTime = 1000;
+        switch (rerquest.Priority)
+        {
+            case TaskRequest.TaskPriority.High:
+                waitTime = 1000;
+                break;
+            case TaskRequest.TaskPriority.Medium:
+                waitTime = 2000;
+                break;
+            case TaskRequest.TaskPriority.Low:
+                waitTime = 3000;
+                break;
+        }
+        // do something
+        _logger.LogInformation($"Doing something as a bg worker for {waitTime * factor} ms");
+        await Task.Delay(waitTime* factor);
     }
 }

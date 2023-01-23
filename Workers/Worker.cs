@@ -53,6 +53,7 @@ public class Worker : BackgroundService
             TaskRequest taskRequest;
             try{
                 taskRequest = TaskRequest.FromJson(body);
+                _logger.LogInformation($"Parsed message {msg.MessageId} with content {body} to TaskRequest object");
             }catch(Exception ex){
                 _logger.LogError($"Error parsing message {msg.MessageId} with content {body} to TaskRequest object. Error: {ex.Message}, removing message from queue.");
                 // delete the message from the queue
@@ -70,11 +71,13 @@ public class Worker : BackgroundService
                 Stream stream = new MemoryStream(Encoding.UTF8.GetBytes(taskRequest.ToJson()));
                 // upload and overwrite the blob
                 await blobClient.UploadAsync(stream, overwrite: true);
+                _logger.LogInformation($"Completed task processing for message {msg.MessageId}.");
 
             }catch(Exception ex){
                 _logger.LogError($"Error updating blob for message {msg.MessageId} with content {body}. Error: {ex.Message}, removing message from queue.");
                 // delete the message from the queue
                 await queueClient.DeleteMessageAsync(msg.MessageId, msg.PopReceipt);
+                // send to a poison queue
                 continue;
             }
             // delete the message from the queue
